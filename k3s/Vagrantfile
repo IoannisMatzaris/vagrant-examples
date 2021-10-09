@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+script = <<-SCRIPT
+  set -x
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik --disable=servicelb --disable=local-storage" sh -
+  echo "source <(kubectl completion bash)" >> ~/.bashrc
+  echo "alias k=kubectl" >> ~/.bashrc
+  echo "complete -F __start_kubectl k" >> ~/.bashrc
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = 'bento/ubuntu-20.04'
+  config.vm.hostname = 'k3s'
+  config.vm.provider :virtualbox do |vb|
+    vb.name = 'k3s'
+    vb.gui = false
+    vb.memory = 4096
+    vb.cpus = 4
+  end
+
+  config.vm.provision :shell, inline: script
+end
