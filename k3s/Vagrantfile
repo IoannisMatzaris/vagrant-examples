@@ -10,6 +10,8 @@ script = <<-SCRIPT
   echo "source <(kubectl completion bash)" >> ~/.bashrc
   echo "alias k=kubectl" >> ~/.bashrc
   echo "complete -F __start_kubectl k" >> ~/.bashrc
+  echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
+  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 SCRIPT
 
 FileUtils.mkdir_p(vagrant_host_dir)
