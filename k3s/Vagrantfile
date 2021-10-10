@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
-vagrant_host_dir = 'vagrant_host_dir'
-vagrant_guest_dir = '/mnt/vagrant'
+host_dir = '.kube'
+guest_dir = '/etc/rancher/k3s'
 script = <<-SCRIPT
   set -x
-  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik --disable=servicelb --disable=local-storage" sh -
-  echo "source <(kubectl completion bash)" >> ~/.bashrc
-  echo "alias k=kubectl" >> ~/.bashrc
-  echo "complete -F __start_kubectl k" >> ~/.bashrc
-  echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
-  curl -sfL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  export INSTALL_K3S_EXEC="--disable=traefik --disable=servicelb --disable=local-storage"
+  curl -sfL https://get.k3s.io | sh -
 SCRIPT
 
 Vagrant.configure(2) do |config|
@@ -23,7 +19,10 @@ Vagrant.configure(2) do |config|
     vb.cpus = ENV.fetch('K3S_CPU', 6)
   end
   config.vm.synced_folder '.', '/vagrant', disabled: true
-  config.vm.synced_folder vagrant_host_dir, vagrant_guest_dir, create: true
-  config.vm.synced_folder '.kube', '/etc/rancher/k3s', create: true
+  config.vm.synced_folder host_dir, guest_dir, create: true
   config.vm.provision :shell, inline: script
+  config.vm.post_up_message = <<-HEREDOC
+    In order to reach the guest k3s cluster, you may have to execute the following command:
+    export KUBECONFIG=#{Dir.pwd}/.kube/k3s.yaml
+  HEREDOC
 end
