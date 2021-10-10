@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-
 vagrant_host_dir = 'vagrant_host_dir'
 vagrant_guest_dir = '/mnt/vagrant'
 script = <<-SCRIPT
@@ -11,10 +9,8 @@ script = <<-SCRIPT
   echo "alias k=kubectl" >> ~/.bashrc
   echo "complete -F __start_kubectl k" >> ~/.bashrc
   echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
-  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  curl -sfL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 SCRIPT
-
-FileUtils.mkdir_p(vagrant_host_dir)
 
 Vagrant.configure(2) do |config|
   config.vm.box = 'bento/ubuntu-20.04'
@@ -22,9 +18,10 @@ Vagrant.configure(2) do |config|
   config.vm.provider :virtualbox do |vb|
     vb.name = 'k3s'
     vb.gui = false
-    vb.memory = 4096
-    vb.cpus = 4
+    vb.memory = ENV.fetch('K3S_MEMORY', 8192)
+    vb.cpus = ENV.fetch('K3S_CPU', 6)
   end
-  config.vm.synced_folder vagrant_host_dir, vagrant_guest_dir
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.synced_folder vagrant_host_dir, vagrant_guest_dir, create: true
   config.vm.provision :shell, inline: script
 end
