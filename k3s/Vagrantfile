@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require 'fileutils'
+
+vagrant_host_dir = 'vagrant_host_dir'
+vagrant_guest_dir = '/mnt/vagrant'
 script = <<-SCRIPT
   set -x
   curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik --disable=servicelb --disable=local-storage" sh -
@@ -7,6 +11,8 @@ script = <<-SCRIPT
   echo "alias k=kubectl" >> ~/.bashrc
   echo "complete -F __start_kubectl k" >> ~/.bashrc
 SCRIPT
+
+FileUtils.mkdir_p(vagrant_host_dir)
 
 Vagrant.configure(2) do |config|
   config.vm.box = 'bento/ubuntu-20.04'
@@ -17,6 +23,6 @@ Vagrant.configure(2) do |config|
     vb.memory = 4096
     vb.cpus = 4
   end
-
+  config.vm.synced_folder vagrant_host_dir, vagrant_guest_dir
   config.vm.provision :shell, inline: script
 end
